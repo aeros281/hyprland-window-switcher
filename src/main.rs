@@ -1,20 +1,26 @@
-use hyprland::data::Client;
-use hyprland::data::Clients;
+use hyprland::data::{Client, Clients, WorkspaceBasic};
+use hyprland::dispatch::{Dispatch, DispatchType, WindowIdentifier};
 use hyprland::prelude::*;
 use rofi;
 use std::collections::HashMap;
-use hyprland::dispatch::{Dispatch, DispatchType, WindowIdentifier};
 
 fn get_titles(clients: &Vec<Client>) -> HashMap<&String, i32> {
     clients
         .iter()
+        .filter(|Client { title, .. }| !title.is_empty())
+        .filter(
+            |Client {
+                 workspace: WorkspaceBasic { id, .. },
+                 ..
+             }| *id != -99, // id -99 is special workspace
+        )
         .map(|Client { title, pid, .. }| (title, *pid))
-        .filter(|(title, _)| !title.is_empty())
         .collect()
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let clients = Clients::get()?.to_vec();
+    println!("{clients:?}");
     let titles = get_titles(&clients);
     let entries = Vec::from_iter(titles.keys());
 
