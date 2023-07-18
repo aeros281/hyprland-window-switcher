@@ -5,6 +5,7 @@ use hyprland::dispatch::{
 };
 use hyprland::prelude::*;
 use rofi;
+use itertools::Itertools;
 use std::collections::HashMap;
 
 mod cli;
@@ -40,11 +41,22 @@ fn switch_window_by_titles() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn switch_workspaces() -> Result<(), Box<dyn std::error::Error>> {
-    let workspaces: Vec<String> = (1..11).into_iter().map(|val| val.to_string()).collect();
+    let mut workspace_hash = HashMap::new();
+    workspace_hash.insert("01. Terminal".to_string(), 1);
+    workspace_hash.insert("02. Browser (Firefox)".to_string(), 2);
+    workspace_hash.insert("03. File manager".to_string(), 3);
+    workspace_hash.insert("04. Media player".to_string(), 4);
+    workspace_hash.insert("05. Git".to_string(), 5);
+    workspace_hash.insert("06. none".to_string(), 6);
+    workspace_hash.insert("07. none".to_string(), 7);
+    workspace_hash.insert("08. none".to_string(), 8);
+    workspace_hash.insert("09. Email".to_string(), 9);
+    workspace_hash.insert("10. Communication (Chat, Slack)".to_string(), 10);
+    let entries = Vec::from_iter(workspace_hash.keys().sorted());
 
-    let choice = rofi::Rofi::new(&workspaces).run()?;
+    let choice = rofi::Rofi::new(&entries).run()?;
     println!("Choice: {}", choice);
-    let workspace_id: i32 = choice.parse::<i32>().unwrap();
+    let workspace_id: i32 = workspace_hash[&choice];
 
     Dispatch::call(DispatchType::Workspace(WorkspaceIdentifierWithSpecial::Id(
         workspace_id,
