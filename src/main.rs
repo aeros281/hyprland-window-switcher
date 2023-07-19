@@ -10,7 +10,7 @@ use std::collections::HashMap;
 
 mod cli;
 
-fn get_titles(clients: &Vec<Client>) -> HashMap<&String, &hyprland::shared::Address> {
+fn get_titles(clients: &Clients) -> HashMap<&String, &hyprland::shared::Address> {
     clients
         .iter()
         .filter(|Client { title, .. }| !title.is_empty())
@@ -25,8 +25,7 @@ fn get_titles(clients: &Vec<Client>) -> HashMap<&String, &hyprland::shared::Addr
 }
 
 fn switch_window_by_titles() -> Result<(), Box<dyn std::error::Error>> {
-    let clients = Clients::get()?.to_vec();
-    println!("{clients:?}");
+    let clients = Clients::get()?;
     let titles = get_titles(&clients);
     let entries = Vec::from_iter(titles.keys());
 
@@ -82,12 +81,9 @@ fn cycle_window_with_same_class() -> Result<(), Box<dyn std::error::Error>> {
         address: active_address,
         ..
     } = Client::get_active()?.unwrap();
-    let mut clients = Clients::get()?
-        .to_vec()
-        .into_iter()
+    let clients = Clients::get()?
         .filter(|Client { class, .. }| *class == active_class)
         .collect::<Vec<Client>>();
-    clients.sort_by_key(|c| format!("{:?}", c.address));
 
     let mut next_index: usize = 0;
     for (index, c) in clients.iter().enumerate() {
