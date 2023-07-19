@@ -41,16 +41,35 @@ fn switch_window_by_titles() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn switch_monitor_by_index(index: usize) -> Result<(), Box<dyn std::error::Error>> {
+fn dispatch_on_monitor_with_relative_index<F>(
+    index: usize,
+    cb: F,
+) -> Result<(), Box<dyn std::error::Error>>
+where
+    F: Fn(&String) -> Result<(), Box<dyn std::error::Error>>,
+{
     let mut monitors = Monitors::get()?.to_vec();
     monitors.sort_by_key(|m| m.x);
-    println!("{monitors:?}");
     let monitor_name = &monitors.get(index).unwrap().name;
-    println!("The monitor id is {}", monitor_name);
-    Dispatch::call(DispatchType::MoveCurrentWorkspaceToMonitor(
-        MonitorIdentifier::Name(&monitor_name),
-    ))?;
-    Ok(())
+    cb(monitor_name)
+}
+
+fn switch_monitor_by_index(index: usize) -> Result<(), Box<dyn std::error::Error>> {
+    dispatch_on_monitor_with_relative_index(index, |monitor_name| {
+        Dispatch::call(DispatchType::MoveCurrentWorkspaceToMonitor(
+            MonitorIdentifier::Name(&monitor_name),
+        ))?;
+        Ok(())
+    })
+}
+
+fn focus_monitor_by_index(index: usize) -> Result<(), Box<dyn std::error::Error>> {
+    dispatch_on_monitor_with_relative_index(index, |monitor_name| {
+        Dispatch::call(DispatchType::FocusMonitor(MonitorIdentifier::Name(
+            &monitor_name,
+        )))?;
+        Ok(())
+    })
 }
 
 fn switch_workspaces() -> Result<(), Box<dyn std::error::Error>> {
@@ -111,8 +130,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         cli::Cli::SwitchWindowByTitle => switch_window_by_titles(),
         cli::Cli::SwitchWorkspace => switch_workspaces(),
         cli::Cli::CycleWindowWithSameClass => cycle_window_with_same_class(),
-        cli::Cli::MoveWorkspaceToMonitor(cli::MoveWorkspaceToMonitorArgs { index }) => {
+        cli::Cli::MoveWorkspaceToMonitor(cli::MonitorIndex { index }) => {
             switch_monitor_by_index(index)
         }
+        cli::Cli::FocusMonitor(cli::MonitorIndex { index }) => focus_monitor_by_index(index),
     }
 }
