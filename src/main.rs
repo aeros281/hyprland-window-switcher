@@ -43,10 +43,12 @@ fn switch_window_by_titles() -> Result<(), Box<dyn std::error::Error>> {
 
 fn switch_monitor_by_index(index: usize) -> Result<(), Box<dyn std::error::Error>> {
     let mut monitors = Monitors::get()?.to_vec();
-    monitors.sort_by_key(|m| m.id);
-    let monitor_id: u8 = monitors.get(index).unwrap().id.try_into().unwrap();
+    monitors.sort_by_key(|m| m.x);
+    println!("{monitors:?}");
+    let monitor_name = &monitors.get(index).unwrap().name;
+    println!("The monitor id is {}", monitor_name);
     Dispatch::call(DispatchType::MoveCurrentWorkspaceToMonitor(
-        MonitorIdentifier::Id(monitor_id),
+        MonitorIdentifier::Name(&monitor_name),
     ))?;
     Ok(())
 }
