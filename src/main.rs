@@ -10,7 +10,7 @@ use std::collections::HashMap;
 
 mod cli;
 
-fn get_titles(clients: &Vec<Client>) -> HashMap<&String, i32> {
+fn get_titles(clients: &Vec<Client>) -> HashMap<&String, &hyprland::shared::Address> {
     clients
         .iter()
         .filter(|Client { title, .. }| !title.is_empty())
@@ -20,7 +20,7 @@ fn get_titles(clients: &Vec<Client>) -> HashMap<&String, i32> {
                  ..
              }| *id != -99, // id -99 is special workspace
         )
-        .map(|Client { title, pid, .. }| (title, *pid))
+        .map(|Client { title, address, .. }| (title, address))
         .collect()
 }
 
@@ -32,10 +32,10 @@ fn switch_window_by_titles() -> Result<(), Box<dyn std::error::Error>> {
 
     let choice = rofi::Rofi::new(&entries).run()?;
     println!("Choice: {}", choice);
-    let pid: u32 = titles[&choice].try_into().unwrap();
+    let address = titles[&choice].clone();
 
-    println!("Pid: {}", pid);
-    Dispatch::call(DispatchType::FocusWindow(WindowIdentifier::ProcessId(pid)))?;
+    println!("Address: {:?}", address);
+    Dispatch::call(DispatchType::FocusWindow(WindowIdentifier::Address(address)))?;
 
     Ok(())
 }
