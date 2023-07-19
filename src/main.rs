@@ -1,11 +1,11 @@
 use clap::Parser;
-use hyprland::data::{Client, Clients, WorkspaceBasic};
+use hyprland::data::{Client, Clients, Monitors, WorkspaceBasic};
 use hyprland::dispatch::{
-    Dispatch, DispatchType, WindowIdentifier, WorkspaceIdentifierWithSpecial,
+    Dispatch, DispatchType, MonitorIdentifier, WindowIdentifier, WorkspaceIdentifierWithSpecial,
 };
 use hyprland::prelude::*;
-use rofi;
 use itertools::Itertools;
+use rofi;
 use std::collections::HashMap;
 
 mod cli;
@@ -35,8 +35,20 @@ fn switch_window_by_titles() -> Result<(), Box<dyn std::error::Error>> {
     let address = titles[&choice].clone();
 
     println!("Address: {:?}", address);
-    Dispatch::call(DispatchType::FocusWindow(WindowIdentifier::Address(address)))?;
+    Dispatch::call(DispatchType::FocusWindow(WindowIdentifier::Address(
+        address,
+    )))?;
 
+    Ok(())
+}
+
+fn switch_monitor_by_index(index: usize) -> Result<(), Box<dyn std::error::Error>> {
+    let mut monitors = Monitors::get()?.to_vec();
+    monitors.sort_by_key(|m| m.id);
+    let monitor_id: u8 = monitors.get(index).unwrap().id.try_into().unwrap();
+    Dispatch::call(DispatchType::MoveCurrentWorkspaceToMonitor(
+        MonitorIdentifier::Id(monitor_id),
+    ))?;
     Ok(())
 }
 
@@ -68,5 +80,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     match cli::Cli::parse() {
         cli::Cli::SwitchWindowByTitle => switch_window_by_titles(),
         cli::Cli::SwitchWorkspace => switch_workspaces(),
+        cli::Cli::MoveWorkspaceToMonitor(cli::MoveWorkspaceToMonitorArgs { index }) => {
+            switch_monitor_by_index(index)
+        }
     }
 }
