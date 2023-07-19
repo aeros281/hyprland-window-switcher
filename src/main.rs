@@ -76,10 +76,43 @@ fn switch_workspaces() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+fn cycle_window_with_same_class() -> Result<(), Box<dyn std::error::Error>> {
+    let Client {
+        class: active_class,
+        address: active_address,
+        ..
+    } = Client::get_active()?.unwrap();
+    let mut clients = Clients::get()?
+        .to_vec()
+        .into_iter()
+        .filter(|Client { class, .. }| *class == active_class)
+        .collect::<Vec<Client>>();
+    clients.sort_by_key(|c| format!("{:?}", c.address));
+
+    let mut next_index: usize = 0;
+    for (index, c) in clients.iter().enumerate() {
+        if format!("{:?}", c.address) == format!("{:?}", active_address) {
+            next_index = index + 1;
+        }
+    }
+
+    next_index = next_index % clients.len();
+    let Client {
+        address: next_address,
+        ..
+    } = clients.get(next_index).unwrap();
+
+    Dispatch::call(DispatchType::FocusWindow(WindowIdentifier::Address(
+        next_address.clone(),
+    )))?;
+    Ok(())
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     match cli::Cli::parse() {
         cli::Cli::SwitchWindowByTitle => switch_window_by_titles(),
         cli::Cli::SwitchWorkspace => switch_workspaces(),
+        cli::Cli::CycleWindowWithSameClass => cycle_window_with_same_class(),
         cli::Cli::MoveWorkspaceToMonitor(cli::MoveWorkspaceToMonitorArgs { index }) => {
             switch_monitor_by_index(index)
         }
