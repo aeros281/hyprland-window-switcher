@@ -3,6 +3,7 @@ use hyprland::dispatch::{
     Dispatch, DispatchType, MonitorIdentifier, WindowIdentifier, WorkspaceIdentifierWithSpecial,
 };
 use hyprland::prelude::*;
+use hyprland::Result as HyprlandResult;
 use itertools::Itertools;
 use rofi;
 use std::collections::HashMap;
@@ -109,7 +110,7 @@ fn get_titles(clients: &Clients) -> HashMap<&String, &hyprland::shared::Address>
         .collect()
 }
 
-fn get_window_name_by_relative_index(index: usize) -> DispatchResult<String> {
+fn get_window_name_by_relative_index(index: usize) -> HyprlandResult<String> {
     let mut monitors = Monitors::get()?.to_vec();
     monitors.sort_by_key(|m| m.x);
     let monitor = monitors.get_mut(index).unwrap();
