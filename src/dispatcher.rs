@@ -74,6 +74,7 @@ pub fn cycle_window_with_same_class() -> DispatchResult {
         ..
     } = Client::get_active()?.unwrap();
     let clients = Clients::get()?
+        .into_iter()
         .filter(|Client { class, .. }| *class == active_class)
         .collect::<Vec<Client>>();
 
